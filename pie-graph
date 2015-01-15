@@ -1,0 +1,14 @@
+setwd('L:/OB Triage/Papers')
+
+library(ggplot2)
+df <- data.frame(
+  variable = c("Clinical Condition", "Priority Level","Clinical Condition & Priority Level", "No reason"),
+  value = c(62,23, 10,5))
+
+pdf("L:/OB Triage/Papers/pie.pdf")
+
+pie <- ggplot(df, aes(x = "", y = value, fill = variable)) +
+  geom_bar(width = 1, stat = "identity") +coord_polar("y") 
+
+plot(pie)
+dev.off()
