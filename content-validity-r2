@@ -1,0 +1,27 @@
+library(reshape)
+library(plyr)
+library(combinat)
+library(RColorBrewer)
+setwd("L:/OB Triage/Tool kit/Statistical Testing of Algorithm/Content Validity/Content Validation Stage 2")
+data<-read.csv("content_validity_v2.csv", header=TRUE)
+data<-data.frame(data,stringsASFactors=FALSE)
+data_q<-data[-1,-c(2,3,5)] #remove first opening data
+#convert 3 and 4 to 1 and 1 and 2 to 0
+df<- as.data.frame(sapply(data_q,gsub,pattern=c("4=Highly relevant"),replacement=1))
+df<-as.data.frame(sapply(df,gsub,pattern="3=Quite relevant",replacement=1))
+df<-as.data.frame(sapply(df,gsub,pattern="2=Somewhat relevant",replacement=0))
+df<-as.data.frame(sapply(df,gsub,pattern="1=Not relevant",replacement=0))
+mdf<-melt(df,id=c("name","category"))
+mdf$value<-as.numeric(as.character(mdf$value)) #prevents values from changing
+#d<-ddply(mdf,.(category,variable),summarize,experts=length(name),threeorfour=sum(value),ICVI=threeorfour/experts, pc=0.5^(experts)*factorial(experts)/(factorial(threeorfour)*factorial(experts-threeorfour)),K=(ICVI-pc)/(1-pc))
+d<-ddply(mdf,.(variable),summarize,experts=length(name),threeorfour=sum(value),ICVI=threeorfour/experts, pc=0.5^(experts)*factorial(experts)/(factorial(threeorfour)*factorial(experts-threeorfour)),K=(ICVI-pc)/(1-pc))
+eval<-rep(0,length(d$K))
+d<-cbind(d,eval)
+d$eval[d$K>0.74]<-"excellent"
+d$eval[d$K>0.59 & d$K<0.75]<-"good"  
+d$eval[d$K>0.39&d$K<0.60]<-"fair"
+d$eval[d$K<0.40]<-"poor"
+quest<-read.csv("CV_questions_v2.csv", header=TRUE)
+d<-merge( quest,d, by = "variable", all = TRUE)
+write.csv(d,file="content_validity_summary_v2.csv")
+
